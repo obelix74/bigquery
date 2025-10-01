@@ -1,0 +1,87 @@
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "age": 30,
+    "department": "Engineering",
+    "salary": 75000,
+    "hire_date": "2023-01-15",
+    "is_active": true,
+    "skills": ["Python", "SQL", "BigQuery"],
+    "address": {
+      "street": "123 Main St",
+      "city": "San Francisco",
+      "state": "CA",
+      "zip": "94105"
+    }
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "age": 28,
+    "department": "Data Science",
+    "salary": 80000,
+    "hire_date": "2023-03-20",
+    "is_active": true,
+    "skills": ["Python", "Machine Learning", "TensorFlow"],
+    "address": {
+      "street": "456 Oak Ave",
+      "city": "Palo Alto",
+      "state": "CA",
+      "zip": "94301"
+    }
+  },
+  {
+    "id": 3,
+    "name": "Mike Johnson",
+    "email": "mike.johnson@example.com",
+    "age": 35,
+    "department": "Engineering",
+    "salary": 85000,
+    "hire_date": "2022-11-10",
+    "is_active": false,
+    "skills": ["Java", "Kubernetes", "GCP"],
+    "address": {
+      "street": "789 Pine St",
+      "city": "Mountain View",
+      "state": "CA",
+      "zip": "94041"
+    }
+  },
+  {
+    "id": 4,
+    "name": "Sarah Wilson",
+    "email": "sarah.wilson@example.com",
+    "age": 32,
+    "department": "Product",
+    "salary": 90000,
+    "hire_date": "2023-02-28",
+    "is_active": true,
+    "skills": ["Product Management", "Analytics", "SQL"],
+    "address": {
+      "street": "321 Cedar Ln",
+      "city": "San Jose",
+      "state": "CA",
+      "zip": "95110"
+    }
+  },
+  {
+    "id": 5,
+    "name": "David Brown",
+    "email": "david.brown@example.com",
+    "age": 29,
+    "department": "Data Science",
+    "salary": 78000,
+    "hire_date": "2023-04-05",
+    "is_active": true,
+    "skills": ["R", "Statistics", "BigQuery"],
+    "address": {
+      "street": "654 Elm St",
+      "city": "Sunnyvale",
+      "state": "CA",
+      "zip": "94086"
+    }
+  }
+]
