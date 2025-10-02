@@ -28,6 +28,21 @@ class BigQueryManager:
             except Exception as e:
                 print(f"Error creating dataset: {e}")
                 return False
+        except Exception as e:
+            if "has not enabled BigQuery" in str(e):
+                print("❌ BigQuery API Error: BigQuery API is not enabled")
+                print("\nTo fix this, enable the required APIs:")
+                print(f"1. Enable BigQuery API:")
+                print(f"   gcloud services enable bigquery.googleapis.com --project={self.config.project_id}")
+                print(f"2. Enable BigQuery Connection API:")
+                print(f"   gcloud services enable bigqueryconnection.googleapis.com --project={self.config.project_id}")
+                print(f"3. Enable Cloud Storage API:")
+                print(f"   gcloud services enable storage.googleapis.com --project={self.config.project_id}")
+                print("\nOr enable them in the Google Cloud Console:")
+                print(f"https://console.cloud.google.com/apis/library?project={self.config.project_id}")
+            else:
+                print(f"Error accessing BigQuery: {e}")
+            return False
 
     def create_connection_if_not_exists(self) -> bool:
         """Create BigQuery connection for Cloud Storage access."""
@@ -48,7 +63,6 @@ class BigQueryManager:
 
             # Create new connection
             connection = bigquery_connection_v1.Connection()
-            connection.display_name = f"BigLake connection for {self.config.project_id}"
             connection.cloud_resource = bigquery_connection_v1.CloudResourceProperties()
 
             request = bigquery_connection_v1.CreateConnectionRequest(
@@ -83,30 +97,13 @@ class BigQueryManager:
             except NotFound:
                 pass
 
-            # Define table schema based on the JSON structure
-            schema = [
-                bigquery.SchemaField("id", "INTEGER", mode="REQUIRED"),
-                bigquery.SchemaField("name", "STRING", mode="REQUIRED"),
-                bigquery.SchemaField("email", "STRING", mode="REQUIRED"),
-                bigquery.SchemaField("age", "INTEGER"),
-                bigquery.SchemaField("department", "STRING"),
-                bigquery.SchemaField("salary", "INTEGER"),
-                bigquery.SchemaField("hire_date", "DATE"),
-                bigquery.SchemaField("is_active", "BOOLEAN"),
-                bigquery.SchemaField("skills", "STRING", mode="REPEATED"),
-                bigquery.SchemaField("address.street", "STRING"),
-                bigquery.SchemaField("address.city", "STRING"),
-                bigquery.SchemaField("address.state", "STRING"),
-                bigquery.SchemaField("address.zip", "STRING"),
-            ]
-
             # Create external table configuration
             external_config = bigquery.ExternalConfig("ICEBERG")
-            external_config.source_uris = [f"{self.config.data_location}/{self.config.table_name}/*"]
+            external_config.source_uris = [f"{self.config.data_location}/{self.config.table_name}/metadata/v1.metadata.json"]
             external_config.connection_id = f"projects/{self.config.project_id}/locations/{self.config.region}/connections/{self.config.connection_id}"
 
-            # Create table
-            table = bigquery.Table(table_ref, schema=schema)
+            # Create table (no schema needed for Iceberg - auto-detected from metadata)
+            table = bigquery.Table(table_ref)
             table.external_data_configuration = external_config
 
             table = self.client.create_table(table)

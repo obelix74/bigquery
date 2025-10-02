@@ -32,6 +32,21 @@ class GCSManager:
             except Exception as e:
                 print(f"Error creating bucket: {e}")
                 return False
+        except Exception as e:
+            if "Unable to acquire impersonated credentials" in str(e):
+                print("❌ Authentication Error: Unable to acquire impersonated credentials")
+                print("This usually means the current authentication setup is incorrect.")
+                print("\nTo fix this, try one of these solutions:")
+                print("1. Use application default credentials:")
+                print("   gcloud auth application-default login")
+                print("2. Or set a service account key:")
+                print("   export GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account-key.json")
+                print("3. Or use gcloud auth:")
+                print("   gcloud auth login")
+                print("   gcloud config set project YOUR_PROJECT_ID")
+            else:
+                print(f"Error accessing GCS: {e}")
+            return False
 
     def upload_json_data(self, json_file_path: str) -> bool:
         """Upload JSON data to GCS in preparation for Iceberg conversion."""
