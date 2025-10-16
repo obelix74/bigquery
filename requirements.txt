@@ -1,0 +1,43 @@
+# BigLake Metastore Python Client Dependencies
+
+# Core Spark and Iceberg dependencies
+pyspark>=3.5.0
+py4j>=0.10.9.7
+
+# Google Cloud dependencies
+google-cloud-bigquery>=3.11.0
+google-cloud-storage>=2.10.0
+google-auth>=2.22.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
+
+# HTTP and API dependencies
+requests>=2.31.0
+urllib3>=1.26.0
+
+# Data processing and utilities
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=12.0.0
+
+# Configuration and environment
+python-dotenv>=1.0.0
+
+# Logging and monitoring
+structlog>=23.1.0
+
+# Development and testing dependencies (optional)
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.7.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Jupyter notebook support (optional)
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
+# Additional Iceberg and Hadoop dependencies
+# Note: These may need to be installed separately or via Spark packages
+# org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.4.0
+# org.apache.iceberg:iceberg-gcp-bundle:1.4.0
