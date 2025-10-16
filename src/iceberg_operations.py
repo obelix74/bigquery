@@ -108,11 +108,9 @@ class IcebergTableManager:
             if schema.partition_columns:
                 partition_str = ", ".join(schema.partition_columns)
                 sql += f" PARTITIONED BY ({partition_str})"
-            
-            # Add clustering if specified
-            if schema.clustering_columns:
-                cluster_str = ", ".join(schema.clustering_columns)
-                sql += f" CLUSTERED BY ({cluster_str})"
+
+            # Note: Iceberg doesn't support CLUSTERED BY syntax in CREATE TABLE
+            # Clustering/sorting can be configured via table properties instead
             
             # Add location if specified
             if location:

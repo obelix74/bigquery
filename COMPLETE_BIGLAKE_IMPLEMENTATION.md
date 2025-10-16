@@ -1573,15 +1573,53 @@ def check_apis_enabled():
             return False
 
         enabled_apis = result.stdout.strip().split('\n')
+        # Remove empty strings and strip whitespace
+        enabled_apis = [api.strip() for api in enabled_apis if api.strip()]
+
+        print(f"🔍 Found {len(enabled_apis)} enabled APIs")
+
         missing_apis = []
 
         for api in required_apis:
+            # Check if the API is in the enabled list
             if api not in enabled_apis:
                 missing_apis.append(api)
+            else:
+                print(f"✅ {api} is enabled")
 
         if missing_apis:
             print(f"❌ Missing APIs: {', '.join(missing_apis)}")
             print("💡 Enable them with: gcloud services enable " + " ".join(missing_apis))
+            print("\n🔍 Debug info - First 10 enabled APIs:")
+            for i, api in enumerate(enabled_apis[:10]):
+                print(f"  {i+1}. '{api}'")
+
+            # Try alternative method to double-check
+            print("\n🔍 Double-checking with alternative method...")
+            try:
+                alt_result = subprocess.run([
+                    'gcloud', 'services', 'list', '--enabled', '--filter=name:(bigquery OR biglake OR storage OR bigqueryconnection)'
+                ], capture_output=True, text=True)
+
+                if alt_result.returncode == 0:
+                    print("🔍 Alternative check results:")
+                    print(alt_result.stdout)
+
+                    # Check if any of our required APIs appear in the output
+                    found_apis = []
+                    for api in required_apis:
+                        if api in alt_result.stdout:
+                            found_apis.append(api)
+
+                    if len(found_apis) == len(required_apis):
+                        print("✅ Alternative check shows all APIs are enabled. Proceeding...")
+                        return True
+                    else:
+                        print(f"🔍 Alternative check found {len(found_apis)}/{len(required_apis)} APIs")
+
+            except Exception as alt_e:
+                print(f"⚠️ Alternative check failed: {alt_e}")
+
             return False
 
         print("✅ All required APIs are enabled")

@@ -1,0 +1,10 @@
+{
+  "project_id": "biglake-metastore-475317",
+  "region": "us-west2",
+  "bucket_name": "anandsbiglakebucket",
+  "dataset_id": "biglake_dataset",
+  "connection_id": "biglake-connection",
+  "catalog_name": "biglake_catalog",
+  "app_name": "BigLakeMetastoreClient",
+  "credential_vending": true
+}

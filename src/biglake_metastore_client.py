@@ -136,44 +136,66 @@ class BigLakeMetastoreClient:
         try:
             # Build Spark configuration
             spark_config = self._build_spark_config()
-            
-            # Create Spark session
-            self.spark_session = SparkSession.builder.appName(self.config.app_name)
-            
+
+            # Create Spark session with Iceberg packages compatible with Spark 4.0
+            # Using the latest Iceberg version that supports Spark 4.0
+            self.spark_session = (SparkSession.builder
+                                .appName(self.config.app_name)
+                                .config("spark.jars.packages",
+                                       "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.1,"
+                                       "org.apache.iceberg:iceberg-gcp-bundle:1.6.1"))
+
             # Apply all configurations
             for key, value in spark_config.items():
                 self.spark_session = self.spark_session.config(key, value)
-            
+
             self.spark_session = self.spark_session.getOrCreate()
-            
+
             logger.info(f"Spark session initialized with catalog: {self.config.catalog_name}")
             return self.spark_session
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize Spark session: {e}")
             raise
     
     def _build_spark_config(self) -> Dict[str, str]:
         """Build Spark configuration for BigLake Metastore."""
+        import subprocess
+
         catalog_name = self.config.catalog_name
-        
+
+        # Get access token for authentication
+        try:
+            result = subprocess.run(['gcloud', 'auth', 'application-default', 'print-access-token'],
+                                  capture_output=True, text=True, check=True)
+            access_token = result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to get access token: {e}")
+            raise
+
         base_config = {
             f'spark.sql.catalog.{catalog_name}': 'org.apache.iceberg.spark.SparkCatalog',
             f'spark.sql.catalog.{catalog_name}.type': 'rest',
             f'spark.sql.catalog.{catalog_name}.uri': 'https://biglake.googleapis.com/iceberg/v1/restcatalog',
             f'spark.sql.catalog.{catalog_name}.warehouse': f'gs://{self.config.bucket_name}',
             f'spark.sql.catalog.{catalog_name}.header.x-goog-user-project': self.config.project_id,
-            f'spark.sql.catalog.{catalog_name}.rest.auth.type': 'org.apache.iceberg.gcp.auth.GoogleAuthManager',
+            f'spark.sql.catalog.{catalog_name}.token': access_token,
+            f'spark.sql.catalog.{catalog_name}.oauth2-server-uri': 'https://oauth2.googleapis.com/token',
             f'spark.sql.catalog.{catalog_name}.io-impl': 'org.apache.iceberg.gcp.gcs.GCSFileIO',
             f'spark.sql.catalog.{catalog_name}.rest-metrics-reporting-enabled': 'false',
             'spark.sql.extensions': 'org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions',
-            'spark.sql.defaultCatalog': catalog_name
+            'spark.sql.defaultCatalog': catalog_name,
+            # Network binding fixes for local development
+            'spark.driver.bindAddress': '127.0.0.1',
+            'spark.driver.host': '127.0.0.1',
+            'spark.ui.enabled': 'false',  # Disable UI to avoid port conflicts
+            'spark.sql.adaptive.enabled': 'true',
+            'spark.sql.adaptive.coalescePartitions.enabled': 'true'
         }
-        
-        # Add credential vending configuration if enabled
-        if self.config.credential_vending:
-            base_config[f'spark.sql.catalog.{catalog_name}.header.X-Iceberg-Access-Delegation'] = 'vended-credentials'
-        
+
+        # Add credential vending configuration - always enabled since the catalog is configured for it
+        base_config[f'spark.sql.catalog.{catalog_name}.header.X-Iceberg-Access-Delegation'] = 'vended-credentials'
+
         return base_config
     
     def initialize_catalog(self) -> Dict[str, Any]:
@@ -254,8 +276,11 @@ class BigLakeMetastoreClient:
     
     def close(self):
         """Clean up resources."""
-        if self.spark_session:
-            self.spark_session.stop()
+        if self.spark_session and hasattr(self.spark_session, 'stop'):
+            try:
+                self.spark_session.stop()
+            except Exception as e:
+                logger.warning(f"Error stopping Spark session: {e}")
             self.spark_session = None
         logger.info("BigLake Metastore Client closed")
 
